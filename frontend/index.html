@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>LLM Bias Dashboard</title>
+		<link rel="stylesheet" href="style.css" />
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	</head>
+	<body>
+		<div class="container">
+			<h2>🧠 LLM Bias Dashboard</h2>
+			<p>Enter a prompt to analyze:</p>
+
+			<textarea
+				id="prompt"
+				placeholder="Type your LLM prompt here..."></textarea
+			><br />
+			<button onclick="analyzePrompt()">Analyze</button>
+
+			<div
+				id="loading"
+				style="display: none; text-align: center; margin-top: 20px">
+				<img src="https://i.gifer.com/YCZH.gif" width="60" /><br />
+				<strong>Analyzing...</strong>
+			</div>
+
+			<div id="results" style="display: none; margin-top: 20px">
+				<div class="result-box">
+					<span class="label">Original:</span>
+					<p id="original"></p>
+				</div>
+				<div class="result-box">
+					<span class="label">Corrected:</span>
+					<p id="corrected"></p>
+				</div>
+				<div class="result-box">
+					<span class="label">Bias Categories:</span>
+					<p id="bias_category"></p>
+				</div>
+				<div class="result-box">
+					<span class="label">Bias Score:</span>
+					<p id="bias_score"></p>
+				</div>
+				<div class="result-box">
+					<span class="label">Corrections:</span>
+					<ul id="corrections"></ul>
+				</div>
+				<canvas id="biasChart" width="300" height="300"></canvas>
+			</div>
+		</div>
+
+		<script src="script.js"></script>
+	</body>
+</html>

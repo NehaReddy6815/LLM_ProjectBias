@@ -1,4 +1,3 @@
-# correct_bias.py
 import re
 
 def correct_bias(text: str):
@@ -45,37 +44,25 @@ def correct_bias(text: str):
         r"\bsikh\b": "religious person",
     }
 
-    factual_contexts = [
-        r"\bindian cuisine\b",
-        r"\bhindu festival\b",
-        r"\bmuslim holiday\b",
-        r"\bchristian holiday\b"
-    ]
-
-    text_lower = text.lower()
-    for ctx in factual_contexts:
-        if re.search(ctx, text_lower):
-            return text, []
-
     corrections_list = []
 
-    def preserve_case(match, replacement):
-        word = match.group(0)
-        if word.isupper():
+    def preserve_case(original, replacement):
+        if original.isupper():
             return replacement.upper()
-        elif word[0].isupper():
+        elif original[0].isupper():
             return replacement.capitalize()
         else:
             return replacement
 
     corrected_text = text
     for pattern, replacement in replacements.items():
-        def repl_func(m):
-            orig_word = m.group(0)
-            corrected_word = preserve_case(m, replacement)
-            if orig_word != corrected_word:
-                corrections_list.append([orig_word, corrected_word])
+        def repl_func(match):
+            orig_word = match.group(0)
+            corrected_word = preserve_case(orig_word, replacement)
+            if orig_word.lower() != corrected_word.lower():
+                corrections_list.append((orig_word, corrected_word))
             return corrected_word
+
         corrected_text = re.sub(pattern, repl_func, corrected_text, flags=re.IGNORECASE)
 
     return corrected_text, corrections_list

@@ -3,54 +3,56 @@ from flask import Flask, request, jsonify
 import pandas as pd
 from detect_bias import detect_bias_text
 from correct_bias import correct_bias
-from transformers import pipeline
+from google import genai
 
 app = Flask(__name__)
 RESULTS_CSV = "results.csv"
 
-# Initialize Hugging Face model
-generator = pipeline("text-generation", model="distilgpt2")
+# Initialize Google Gemini client
+client = genai.Client(api_key="AIzaSyC-ns7bQo2NpYV5X8G19MfST4sdXuBuX98")  # replace with your actual API key
 
 def log_to_blockchain(prompt, original, corrected, bias_category, bias_score):
+    # Dummy blockchain logger
     return "0xDUMMYTXHASH"
 
 @app.route("/generate", methods=["POST"])
 def generate():
     data = request.get_json(force=True)
-    prompt = data.get("prompt", "")
+    prompt = data.get("prompt", "").strip()
     if not prompt:
         return jsonify({"error": "Prompt is required."}), 400
 
+    # 1️⃣ Generate response via Gemini
     try:
-        generated_outputs = generator(
-            prompt,
-            max_length=100,
-            num_return_sequences=1,
-            temperature=0.7,
-            do_sample=True,
-            top_k=50,
-            top_p=0.95
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=f"Answer concisely but in detail: {prompt}"
         )
-        generated_text = generated_outputs[0]['generated_text'].strip()
+        generated_text = response.text.strip()
+        # Limit to 4-5 sentences for readability
+        sentences = [s.strip() for s in generated_text.split(".") if s.strip()]
+        generated_text = ". ".join(sentences[:5]) + "."
     except Exception as e:
         return jsonify({"error": f"Text generation error: {str(e)}"}), 500
 
-    # Detect bias (string-based)
-    bias_score, bias_category = detect_bias_text(generated_text)
+    # 2️⃣ Correct bias and get corrections list
+    corrected_text, corrections_list = correct_bias(generated_text)
 
-    # Correct bias if detected
-    corrected_text = generated_text if bias_score == 0 else correct_bias(generated_text)
+    # 3️⃣ Detect bias on corrected text
+    bias_score, bias_category = detect_bias_text(corrected_text)
 
-    # Save results
+    # 4️⃣ Save results
     result_row = {
         "prompt": prompt,
         "original": generated_text,
         "corrected": corrected_text,
+        "corrections": corrections_list,
         "bias_category": bias_category,
         "bias_score": bias_score,
         "tx_hash": log_to_blockchain(prompt, generated_text, corrected_text, bias_category, bias_score)
     }
 
+    # Save to CSV
     try:
         try:
             df_existing = pd.read_csv(RESULTS_CSV)

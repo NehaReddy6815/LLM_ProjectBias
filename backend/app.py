@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, send_from_directory
 
 import pandas as pd
 import os
+import sqlite3
 from detect_bias import detect_bias_text
 from correct_bias import correct_bias
 from google import genai
@@ -111,6 +112,91 @@ def generate():
         pass  # ignore log errors silently
 
     return jsonify(result_row)
+
+
+@app.route("/history", methods=["GET"])
+def get_history():
+    """Get all records from database"""
+    try:
+        conn = sqlite3.connect("records.db")
+        c = conn.cursor()
+        
+        # Get all records, newest first
+        c.execute("""
+            SELECT record_hash, prompt, output, bias_category, 
+                   bias_score_before, bias_score_after, stored_on_chain
+            FROM records 
+            ORDER BY rowid DESC
+            LIMIT 50
+        """)
+        
+        records = c.fetchall()
+        conn.close()
+        
+        # Format for JSON
+        history = []
+        for record in records:
+            history.append({
+                "hash": record[0][:16] + "...",  # Shortened hash
+                "full_hash": record[0],
+                "prompt": record[1],
+                "output": record[2],
+                "bias_category": record[3],
+                "bias_score_before": round(record[4], 2) if record[4] else 0,
+                "bias_score_after": round(record[5], 2) if record[5] else 0,
+                "on_chain": bool(record[6])
+            })
+        
+        return jsonify({"success": True, "history": history})
+    
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/stats", methods=["GET"])
+def get_stats():
+    """Get statistics about bias detection"""
+    try:
+        conn = sqlite3.connect("records.db")
+        c = conn.cursor()
+        
+        # Total records
+        c.execute("SELECT COUNT(*) FROM records")
+        total = c.fetchone()[0]
+        
+        # Average bias score
+        c.execute("SELECT AVG(bias_score_before) FROM records WHERE bias_score_before > 0")
+        avg_bias = c.fetchone()[0] or 0
+        
+        # Records with bias detected
+        c.execute("SELECT COUNT(*) FROM records WHERE bias_category != 'none' AND bias_category != ''")
+        biased_count = c.fetchone()[0]
+        
+        # Most common bias categories
+        c.execute("""
+            SELECT bias_category, COUNT(*) as count 
+            FROM records 
+            WHERE bias_category != 'none' AND bias_category != ''
+            GROUP BY bias_category 
+            ORDER BY count DESC 
+            LIMIT 5
+        """)
+        top_biases = [{"category": row[0], "count": row[1]} for row in c.fetchall()]
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "stats": {
+                "total_records": total,
+                "biased_records": biased_count,
+                "average_bias_score": round(avg_bias, 2),
+                "top_bias_categories": top_biases
+            }
+        })
+    
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 if __name__ == "__main__":

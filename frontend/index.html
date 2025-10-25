@@ -1,54 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<title>LLM Bias Dashboard</title>
-		<link rel="stylesheet" href="style.css" />
-		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	</head>
-	<body>
-		<div class="container">
-			<h2>🧠 LLM Bias Dashboard</h2>
-			<p>Enter a prompt to analyze:</p>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Bias Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('analyze')">🔍 Analyze</button>
+        <button class="tab-btn" onclick="showTab('history')">📜 History</button>
+        <button class="tab-btn" onclick="showTab('stats')">📊 Statistics</button>
+    </div>
 
-			<textarea
-				id="prompt"
-				placeholder="Type your LLM prompt here..."></textarea
-			><br />
-			<button onclick="analyzePrompt()">Analyze</button>
+    <div class="container">
+        <!-- TAB 1: ANALYZE -->
+        <div id="analyze-tab" class="tab-content active">
+            <h2>🧠 AI Bias Analyzer</h2>
+            <p>Detect and correct bias in AI-generated content with blockchain verification</p>
 
-			<div
-				id="loading"
-				style="display: none; text-align: center; margin-top: 20px">
-				<img src="https://i.gifer.com/YCZH.gif" width="60" /><br />
-				<strong>Analyzing...</strong>
-			</div>
+            <textarea id="prompt" placeholder="Enter your prompt here... Try: 'Describe a software engineer' or 'Tell me about a nurse'"></textarea>
+            <button onclick="analyzePrompt()">✨ Analyze for Bias</button>
 
-			<div id="results" style="display: none; margin-top: 20px">
-				<div class="result-box">
-					<span class="label">Original:</span>
-					<p id="original"></p>
-				</div>
-				<div class="result-box">
-					<span class="label">Corrected:</span>
-					<p id="corrected"></p>
-				</div>
-				<div class="result-box">
-					<span class="label">Bias Categories:</span>
-					<p id="bias_category"></p>
-				</div>
-				<div class="result-box">
-					<span class="label">Bias Score:</span>
-					<p id="bias_score"></p>
-				</div>
-				<div class="result-box">
-					<span class="label">Corrections:</span>
-					<ul id="corrections"></ul>
-				</div>
-				<canvas id="biasChart" width="300" height="300"></canvas>
-			</div>
-		</div>
+            <div id="loading" style="display: none; text-align: center; margin-top: 20px">
+                <img src="https://i.gifer.com/YCZH.gif" width="60" alt="Loading" /><br />
+                <strong>Analyzing your prompt...</strong>
+            </div>
 
-		<script src="script.js"></script>
-	</body>
+            <div id="results" style="display: none; margin-top: 30px">
+                <div class="result-box">
+                    <span class="label">📝 Original Text</span>
+                    <p id="original"></p>
+                </div>
+                <div class="result-box">
+                    <span class="label">✅ Corrected Text</span>
+                    <p id="corrected"></p>
+                </div>
+                <div class="result-box">
+                    <span class="label">🎯 Bias Categories Detected</span>
+                    <p id="bias_category"></p>
+                </div>
+                <div class="result-box">
+                    <span class="label">📊 Bias Score</span>
+                    <p id="bias_score"></p>
+                </div>
+                <div class="result-box">
+                    <span class="label">🔧 Corrections Made</span>
+                    <ul id="corrections"></ul>
+                </div>
+                <div class="result-box">
+                    <span class="label">⛓️ Blockchain Transaction</span>
+                    <p id="tx_hash" style="font-family: 'Courier New', monospace; font-size: 12px; word-break: break-all;"></p>
+                </div>
+                <div class="result-box">
+                    <canvas id="biasChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: HISTORY -->
+        <div id="history-tab" class="tab-content">
+            <h2>📜 Analysis History</h2>
+            <p>View all previous bias detection results stored on blockchain</p>
+            <button onclick="loadHistory()">🔄 Refresh History</button>
+            
+            <div id="history-loading" style="display: none; text-align: center; margin-top: 30px;">
+                <img src="https://i.gifer.com/YCZH.gif" width="50" alt="Loading" />
+                <p style="color: white; margin-top: 10px;">Loading history...</p>
+            </div>
+            
+            <div id="history-list" style="margin-top: 30px;"></div>
+        </div>
+
+        <!-- TAB 3: STATISTICS -->
+        <div id="stats-tab" class="tab-content">
+            <h2>📊 Bias Analytics</h2>
+            <p>Comprehensive statistics about bias detection patterns</p>
+            <button onclick="loadStats()">🔄 Refresh Stats</button>
+            
+            <div id="stats-loading" style="display: none; text-align: center; margin-top: 30px;">
+                <img src="https://i.gifer.com/YCZH.gif" width="50" alt="Loading" />
+                <p style="color: white; margin-top: 10px;">Loading statistics...</p>
+            </div>
+            
+            <div id="stats-content" style="margin-top: 30px;">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="total-records">0</h3>
+                        <p>Total Analyses</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="biased-records">0</h3>
+                        <p>Bias Detected</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="avg-bias">0.0</h3>
+                        <p>Avg Bias Score</p>
+                    </div>
+                </div>
+                
+                <div class="result-box">
+                    <span class="label">📈 Top Bias Categories</span>
+                    <canvas id="categoryChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
 </html>

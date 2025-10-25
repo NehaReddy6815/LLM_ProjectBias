@@ -1,4 +1,6 @@
-from flask import Flask, request, jsonify
+from store_on_chain import store_on_chain
+from flask import Flask, request, jsonify, send_from_directory
+
 import pandas as pd
 import os
 from detect_bias import detect_bias_text
@@ -17,9 +19,30 @@ client = genai.Client(api_key="AIzaSyC-ns7bQo2NpYV5X8G19MfST4sdXuBuX98")  # repl
 
 
 def log_to_blockchain(prompt, original, corrected, bias_category, bias_score):
-    """Simulated blockchain logger."""
-    return "0xDUMMYTXHASH"
+    """
+    Store record on blockchain using store_on_chain.py
+    Returns the transaction hash.
+    """
+    record = {
+        "prompt": prompt,
+        "output": corrected,
+        "bias_category": ",".join(bias_category) if isinstance(bias_category, list) else bias_category,
+        "bias_score_before": bias_score,
+        "bias_score_after": 0  # You can update this if you compute corrected score
+    }
 
+    tx_hashes = store_on_chain([record])
+    return tx_hashes[0] if tx_hashes else None
+
+# Serve the main HTML
+@app.route("/")
+def home():
+    return send_from_directory('../frontend', 'index.html')
+
+# Serve other frontend files (CSS, JS, images)
+@app.route("/<path:path>")
+def static_files(path):
+    return send_from_directory('../frontend', path)
 
 @app.route("/generate", methods=["POST"])
 def generate():

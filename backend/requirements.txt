@@ -2,3 +2,5 @@ flask
 pandas
 torch
 transformers
+genai
+web3

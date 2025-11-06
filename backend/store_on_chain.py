@@ -16,7 +16,7 @@ w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:7545"))
 # w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
 
 # Replace with your private key (ensure it's 0x-prefixed)
-private_key = "0xcda6c2b20348fae58e19bfa56fc227f2baa206d97b258dcac106b74385114d0a"
+private_key = "0x175256ca6ae74782b302e6f774b9ef2c4cd66180a96bdf852d6181d58339b1c8"
 account = Account.from_key(private_key).address
 
 # Load ABI from file

@@ -1,4 +1,6 @@
 let categoryChartInstance = null;
+let biasChartInstance = null;
+
 
 // Tab switching
 function showTab(tabName) {
@@ -76,10 +78,15 @@ async function analyzePrompt() {
         document.getElementById("loading").style.display = "none";
     }
 }
-
 function drawBiasChart(biasScore) {
     const ctx = document.getElementById("biasChart").getContext("2d");
-    new Chart(ctx, {
+
+    // ✅ If a chart already exists, destroy it first
+    if (biasChartInstance) {
+        biasChartInstance.destroy();
+    }
+
+    biasChartInstance = new Chart(ctx, {
         type: "doughnut",
         data: {
             labels: ["Bias Detected", "Unbiased"],
@@ -97,6 +104,8 @@ function drawBiasChart(biasScore) {
         },
     });
 }
+
+   
 
 // Load history
 async function loadHistory() {
